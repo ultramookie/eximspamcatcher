@@ -1,0 +1,6 @@
+Exim Spam Catcher
+Licensed under GPL3
+Steve "Mookie" Kong
+http://ultramookie.com/
+
+A small script to build a hosts.deny file based on entries in the Exim reject logs.
