@@ -13,7 +13,7 @@ while (<DEFAULTDENYFILE>) {
 
 my %ipaddy = ();
 
-@passed = `grep -hE '^P' /var/log/exim/reject.* | awk '{print \$4}' | sort`;
+@passed = `grep -hE '^P|relay not permitted' /var/log/exim/reject.* | awk '{print \$4}' | sort`;
 
 foreach $line (@passed) {
 	chomp $line;
