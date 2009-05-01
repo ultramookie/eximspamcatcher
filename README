@@ -4,3 +4,18 @@ Steve "Mookie" Kong
 http://ultramookie.com/
 
 A small script to build a hosts.deny file based on entries in the Exim reject logs.
+
+The script looks at headers for multiple reject.log files (if you are rotating your
+reject logs).  If an IP shows up as being rejected by spamassassin more than the
+$threshold (in the script), then it is added to the host.deny file.
+
+Add this script into the crontab for root.
+
+Assumed:
+
+  + You are using exim4.
+  + You are using spamassassin.
+  + Your exim reject logs are in /var/log/exim/
+
+You can create a /etc/hosts.default.deny file that includes things that are fixed
+which will be included in the final hosts.deny file.
