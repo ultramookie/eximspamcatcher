@@ -2,6 +2,7 @@
 
 # How many hits before we block host?
 $threshold = 5;
+$rthreshold = 10;
 
 open DEFAULTDENYFILE, "/etc/hosts.default.deny" or die $!; 
 open DENYFILE, ">/etc/hosts.deny" or die $!;
@@ -12,6 +13,8 @@ while (<DEFAULTDENYFILE>) {
 }
 
 my %ipaddy = ();
+my %iprange = ();
+$prevIP = "";
 
 @passed = `grep -hE '^P|relay not permitted' /var/log/exim/reject.* | awk '{print \$4}' | sort`;
 
@@ -20,11 +23,22 @@ foreach $line (@passed) {
 	$line =~ s/\[//g;
 	$line =~ s/\]//g;
    	if ($line =~ /^([\d]+)\.([\d]+)\.([\d]+)\.([\d]+)$/) {
+		@bits = split(/\./,$line);
+		$theTwoFiveFive = $bits[0] . "." . $bits[1] . "." . $bits[2] . ".";
+		$curIP = $line;
 		if ($ipaddy{$line}) {
 			$ipaddy{$line}++;
 		} else {
 			$ipaddy{$line} = 1;
 		}
+		if ($curIP ne $prevIP) {
+			if ($iprange{$theTwoFiveFive}) {
+				$iprange{$theTwoFiveFive}++;
+			} else {
+				$iprange{$theTwoFiveFive} = 1;
+			}
+		}	
+		$prevIP = $curIP;
    	}
 	
 }
@@ -32,8 +46,17 @@ foreach $line (@passed) {
 print DENYFILE "\n";
 print DENYFILE "# Spammers\n";
 
+while ( my ($range, $hits) = each(%iprange) ) {
+	if ($hits >= $rthreshold) {
+        	print DENYFILE "exim: $range\n";
+	}
+}
+
 while ( my ($addy, $hits) = each(%ipaddy) ) {
-	if ($hits >= $threshold) { 
+	@bits = split(/\./,$addy);
+	$theTwoFiveFive = $bits[0] . "." . $bits[1] . "." . $bits[2] . ".";
+
+	if ( ($hits >= $threshold) && !($iprange{$theTwoFiveFive} >= $rthreshold) )  { 
         	print DENYFILE "exim: $addy\n";
 	}
 }
