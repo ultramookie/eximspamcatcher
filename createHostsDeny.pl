@@ -2,6 +2,8 @@
 
 # How many hits before we block host?
 $threshold = 5;
+
+# How many hits before we block a /24 range?
 $rthreshold = 10;
 
 # Deny /24 block? yes = 1; no = 0
