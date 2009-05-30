@@ -4,6 +4,9 @@
 $threshold = 5;
 $rthreshold = 10;
 
+# Deny /24 block? yes = 1; no = 0
+$twentyfourDeny = 0;
+
 open DEFAULTDENYFILE, "/etc/hosts.default.deny" or die $!; 
 open DENYFILE, ">/etc/hosts.deny" or die $!;
 
@@ -16,7 +19,7 @@ my %ipaddy = ();
 my %iprange = ();
 $prevIP = "";
 
-@passed = `grep -hE '^P|relay not permitted' /var/log/exim/reject.* | awk '{print \$4}' | sort`;
+@passed = `grep -hE '^P|relay not permitted|zen.spamhaus.org|psbl.surriel.com|bl.spamcop.net' /var/log/exim/reject.* | awk '{print \$4}' | sort`;
 
 foreach $line (@passed) {
 	chomp $line;
@@ -46,9 +49,11 @@ foreach $line (@passed) {
 print DENYFILE "\n";
 print DENYFILE "# Spammers\n";
 
-while ( my ($range, $hits) = each(%iprange) ) {
-	if ($hits >= $rthreshold) {
-        	print DENYFILE "exim: $range\n";
+if ($twentyfourDeny == 1) {
+	while ( my ($range, $hits) = each(%iprange) ) {
+		if ($hits >= $rthreshold) {
+        		print DENYFILE "exim: $range\n";
+		}
 	}
 }
 
