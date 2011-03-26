@@ -7,7 +7,7 @@ $threshold = 5;
 $rthreshold = 10;
 
 # Deny /24 block? yes = 1; no = 0
-$twentyfourDeny = 0;
+$twentyfourDeny = 1;
 
 open DEFAULTDENYFILE, "/etc/hosts.default.deny" or die $!; 
 open DENYFILE, ">/etc/hosts.deny" or die $!;
@@ -21,9 +21,13 @@ my %ipaddy = ();
 my %iprange = ();
 $prevIP = "";
 
-@passed = `grep -hE '^P|relay not permitted|zen.spamhaus.org|psbl.surriel.com|bl.spamcop.net' /var/log/exim/reject.* | awk '{print \$4}' | sort`;
+@passed = `grep -hE '^P|relay not permitted|Sender verify failed|cherjo|aapublic|rfc-ignorant.org|safe.dnsbl.sorbs.net|zen.spamhaus.org|psbl.surriel.com|bl.spamcop.net' /var/log/exim/reject.* | awk '{print \$4}' | sort`;
+@wrapped = `grep -hE 'tcp wrap' /var/log/exim/reject.* | awk '{print \$6}' | sort`;
 
-foreach $line (@passed) {
+@total = (@passed,@wrapped);
+@total = sort(@total);
+
+foreach $line (@total) {
 	chomp $line;
 	$line =~ s/\[//g;
 	$line =~ s/\]//g;
